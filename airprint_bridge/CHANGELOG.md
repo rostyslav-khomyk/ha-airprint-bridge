@@ -1,3 +1,8 @@
+# 1.3.1
+
+- Verify the ET-2500 using standard SNMP model identification; its profile has no EEPROM model-name field.
+- Present read-only status and counters in plain language.
+
 # 1.3.0
 
 - Add admin ingress sidebar, recent jobs, and watchdog health endpoint.

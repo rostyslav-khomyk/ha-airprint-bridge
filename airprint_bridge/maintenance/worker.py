@@ -15,11 +15,12 @@ def execute(action, host, backup_dir='/data/maintenance'):
     if action not in ACTIONS:
         raise ValueError('Unknown maintenance action')
     printer = EpsonPrinter(model='ET-2500', hostname=host, timeout=2, retries=0, verify_writes=True)
-    model = printer.get_printer_model()
+    model = printer.get_snmp_info(mib_name='Model').get('Model')
     if not re.fullmatch(r'(?:EPSON\s+)?ET-2500(?:\s+Series)?', str(model).strip(), re.I):
         raise ValueError('Printer identity is not a verified ET-2500: ' + str(model))
     if action == 'status':
-        return {'model': model, 'status': printer.get_printer_status(), 'waste': printer.get_waste_ink_levels()}
+        status = printer.get_printer_status() or {}
+        return {'model': model, 'state': status.get('status', [None, 'Unknown'])[1], 'waste': printer.get_waste_ink_levels(), 'color_pages': status.get('paper_count_color'), 'monochrome_pages': status.get('paper_count_monochrome')}
     if action == 'reset':
         cells = printer.parm['raw_waste_reset']
         before = {str(cell): printer.read_eeprom(cell) for cell in cells}
