@@ -219,7 +219,7 @@ else
   log "Driver: $(lpinfo -m 2>/dev/null | grep -F -- "$PPD " | head -n1 | cut -d' ' -f2-)"
 fi
 
-lpadmin -x "$QUEUE" 2>/dev/null || true
+# Update the existing queue in place so restart preserves job metadata.
 if ! lpadmin -p "$QUEUE" -v "$PRINTER_URI" "${MODEL_ARG[@]}" -D "$PRINTER_NAME" -L "$PRINTER_LOC" \
        -o printer-is-shared=false -E 2>/tmp/lpadmin.log; then
   wait_forever "Could not create the printer: $(grep -v deprecated /tmp/lpadmin.log | head -n2)"
