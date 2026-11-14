@@ -1,3 +1,9 @@
+# 1.3.3
+
+- Resolve browser requests against the HA ingress path explicitly.
+- Separate each maintenance result and confirmation field; add a bounded activity log.
+- Persist CUPS queue definitions together with job metadata across restarts.
+
 # 1.3.2
 
 - Retain job IDs in CUPS job queries so the sidebar can display history.

@@ -25,7 +25,7 @@ Default options are A4, color, simplex, ET-2500 driver match and port 8631. ESC/
 
 ## Persistence and limitations
 
-Supervisor persists app options and `/data`, including TLS certificates and the gateway spool. The CUPS queue is reconstructed from options at startup; job metadata is persisted under `/data/cups-spool`. Do not make manual CUPS configuration changes expecting them to persist. Backup this app using Supervisor's normal app backup.
+Supervisor persists app options and `/data`, including TLS certificates and the gateway spool. CUPS queue definitions persist under `/data/cups-config`; job metadata persists under `/data/cups-spool`. Startup reapplies the configured printer options without deleting the queue. Do not make manual CUPS configuration changes expecting them to persist. Backup this app using Supervisor's normal app backup.
 
 CUPS has a 50 MiB per-request limit and a 20-job limit; completed CUPS job documents are deleted; metadata for up to 20 jobs is retained for up to 24 hours. The separate IPP front end may retain failed spool documents under `/data/spool`; inspect/clear them when retiring the app. Gateway completion means CUPS accepted a job, not that paper emerged. Cancellation after handoff is not synchronized. This fork remains experimental and has not had a full security audit.
 
@@ -56,3 +56,5 @@ The panel shows queue state and bounded recent job history. Its explicit mainten
 Maintenance toolkit source: [Ircama/epson_print_conf](https://github.com/Ircama/epson_print_conf/tree/2dc3bebacf314f22bd6484acdb2a7434c7cc00ad), EUPL-1.2. The source and license are included under `airprint_bridge/maintenance`, separately from the MIT print bridge. `worker.py` is EUPL-1.2. See also [Epson Linux utility capabilities](https://download.ebz.epson.net/man/linux/utility.html).
 
 A false-valued option bug inherited from upstream (`jq // empty`) was fixed so disabled sensors stay disabled rather than attempting unauthorized API updates.
+
+Version 1.3.3 resolves requests against the explicit HA ingress base path and separates results/errors for every maintenance control. A bounded 50-event maintenance activity log is kept in memory for the current app session.

@@ -1,5 +1,8 @@
 """Admin-only HA ingress panel. All printer writes require explicit POST actions."""
 import hmac
+import html
+import datetime
+from collections import deque
 import json
 import pathlib
 import secrets
@@ -12,6 +15,13 @@ import cups
 CSRF = secrets.token_urlsafe(32)
 LOCK = threading.Lock()
 QUEUE = 'bridge'
+EVENTS = deque(maxlen=50)
+EVENT_LOCK = threading.Lock()
+
+def event(action, outcome, message):
+    with EVENT_LOCK:
+        EVENTS.appendleft({'time': datetime.datetime.now(datetime.timezone.utc).isoformat(), 'action': action, 'outcome': outcome, 'message': message})
+
 STATES = {3: 'Pending', 4: 'Held', 5: 'Processing', 6: 'Stopped', 7: 'Cancelled', 8: 'Aborted', 9: 'Completed'}
 
 def connection():
@@ -80,10 +90,15 @@ class Handler(BaseHTTPRequestHandler):
                 subprocess.run(['pgrep', '-x', 'avahi-daemon'], check=True, capture_output=True)
                 connection().getPrinters()
                 self.reply(200, {'healthy': True})
+            elif self.path == '/api/activity':
+                with EVENT_LOCK:
+                    self.reply(200, list(EVENTS))
             elif self.path == '/api/status':
                 self.reply(200, snapshot())
             elif self.path == '/':
-                self.reply(200, pathlib.Path('/opt/panel/panel.html').read_text().replace('__CSRF__', CSRF), 'text/html; charset=utf-8')
+                base = self.headers.get('X-Ingress-Path', '').rstrip('/') + '/'
+                page = pathlib.Path('/opt/panel/panel.html').read_text().replace('__CSRF__', CSRF).replace('__BASE__', html.escape(base, quote=True))
+                self.reply(200, page, 'text/html; charset=utf-8')
             else:
                 self.reply(404, {'error': 'Not found'})
         except Exception as error:
@@ -100,11 +115,16 @@ class Handler(BaseHTTPRequestHandler):
             if not 0 < length <= 4096:
                 raise ValueError('Invalid request size')
             data = json.loads(self.rfile.read(length))
+            action = data.get('action', 'unknown')
             if self.path != '/api/maintenance':
                 self.reply(404, {'error': 'Not found'})
                 return
-            self.reply(200, maintenance(data['action'], data.get('confirmation', '')))
+            event(action, 'started', 'Request received')
+            result = maintenance(action, data.get('confirmation', ''))
+            event(action, 'completed', 'Request completed; check physical output for print/clean actions')
+            self.reply(200, result)
         except Exception as error:
+            event(locals().get('action', 'request'), 'failed', str(error))
             self.reply(400, {'error': str(error)})
 
     def log_message(self, *_):

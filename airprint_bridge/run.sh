@@ -27,6 +27,16 @@ log "Starting AirPrint Bridge on $(dpkg --print-architecture)."
 # ---------- 1. Drivers ----------
 /install_driver.sh
 
+# Retain queue definitions before CUPS loads retained job metadata.
+if [ ! -L /etc/cups ]; then
+  mkdir -p /data/cups-config
+  if [ ! -f /data/cups-config/cupsd.conf ]; then
+    cp -a /etc/cups/. /data/cups-config/
+  fi
+  rm -rf /etc/cups
+  ln -s /data/cups-config /etc/cups
+fi
+cp /opt/default-cupsd.conf /etc/cups/cupsd.conf
 # Persist CUPS job metadata; completed document retention remains disabled.
 if [ ! -L /var/spool/cups ]; then
   mkdir -p /data/cups-spool

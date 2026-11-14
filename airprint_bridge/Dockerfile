@@ -23,6 +23,7 @@ RUN python3 -m venv /opt/maintenance-venv \
        epson-escp2==1.0.4 PyYAML==6.0.3
 COPY panel.py panel.html /opt/panel/
 COPY cupsd.conf /etc/cups/cupsd.conf
+COPY cupsd.conf /opt/default-cupsd.conf
 COPY avahi-daemon.conf /etc/avahi/avahi-daemon.conf
 COPY trim_ppd.awk /trim_ppd.awk
 COPY run.sh install_driver.sh discover.sh notify.sh status.sh print_job.sh make_attrs.sh /
