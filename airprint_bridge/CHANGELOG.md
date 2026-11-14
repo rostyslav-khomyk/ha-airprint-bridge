@@ -1,3 +1,8 @@
+# 1.3.4
+
+- Allow the loopback-only CUPS client to read retained job metadata for the admin panel.
+- Record an unverified maintenance operation as a failure.
+
 # 1.3.3
 
 - Resolve browser requests against the HA ingress path explicitly.

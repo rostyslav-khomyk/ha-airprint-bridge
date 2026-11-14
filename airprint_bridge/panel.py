@@ -121,6 +121,8 @@ class Handler(BaseHTTPRequestHandler):
                 return
             event(action, 'started', 'Request received')
             result = maintenance(action, data.get('confirmation', ''))
+            if result.get('success') is False:
+                raise ValueError('The printer did not verify the operation. Review /data/maintenance before retrying.')
             event(action, 'completed', 'Request completed; check physical output for print/clean actions')
             self.reply(200, result)
         except Exception as error:
