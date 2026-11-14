@@ -5,7 +5,7 @@
 set -uo pipefail
 
 OPTIONS=/data/options.json
-opt() { jq -r --arg k "$1" '.[$k] // empty' "$OPTIONS"; }
+opt() { jq -r --arg k "$1" 'if has($k) then .[$k] else empty end' "$OPTIONS"; }
 log() { echo "[airprint-bridge] $*"; }
 notify() { /notify.sh "$1" "$2"; }
 wait_forever() { log "$*"; log "Fix the Configuration tab, then restart the add-on."; sleep infinity; }
@@ -27,6 +27,14 @@ log "Starting AirPrint Bridge on $(dpkg --print-architecture)."
 # ---------- 1. Drivers ----------
 /install_driver.sh
 
+# Persist CUPS job metadata; completed document retention remains disabled.
+if [ ! -L /var/spool/cups ]; then
+  mkdir -p /data/cups-spool
+  chown root:lp /data/cups-spool
+  chmod 710 /data/cups-spool
+  rm -rf /var/spool/cups
+  ln -s /data/cups-spool /var/spool/cups
+fi
 # ---------- 2. Services: D-Bus, Avahi, CUPS ----------
 mkdir -p /run/dbus /run/cups /var/spool/cups /var/cache/cups /var/log/cups /run/airprint-bridge
 rm -f /run/dbus/pid /run/avahi-daemon/pid
@@ -296,6 +304,9 @@ fi
     | sed 's/^/[airprint-bridge] Note: also shared on your network (can look like a duplicate on phones): /'
 ) &
 
+python3 /opt/panel/panel.py &
+PANEL_PID=$!
+
 # ---------- 6. Status sensors ----------
 if [ "$(opt status_sensors)" != "false" ]; then
   HOST="$(echo "$PRINTER_URI" | sed -nE 's#^(socket|ipp|ipps|lpd|http|https)://([^/:@]+@)?([^/:]+).*#\3#p')"
@@ -310,6 +321,7 @@ fi
 
 # ---------- 7. Keep everything running ----------
 while pgrep -x cupsd >/dev/null; do
+  kill -0 "$PANEL_PID" 2>/dev/null || { log "Panel stopped; exiting for Supervisor recovery."; exit 1; }
   if ! pgrep -x ippeveprinter >/dev/null; then
     log "AirPrint front end stopped; restarting it."
     start_airprint

@@ -8,7 +8,7 @@
 set -uo pipefail
 
 log() { echo "[airprint-bridge] $*"; }
-opt() { jq -r --arg k "$1" '.[$k] // empty' /data/options.json; }
+opt() { jq -r --arg k "$1" 'if has($k) then .[$k] else empty end' /data/options.json; }
 
 ARCH="$(dpkg --print-architecture)"   # amd64 or arm64
 CACHE=/data/driver

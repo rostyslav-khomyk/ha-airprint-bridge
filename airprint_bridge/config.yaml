@@ -1,5 +1,5 @@
 name: Epson AirPrint Bridge
-version: "1.2.2"
+version: "1.3.0"
 slug: airprint_bridge
 description: (Beta) Turn almost any printer (network or USB) into an AirPrint printer for iPhones, iPads and Macs, with status sensors.
 url: https://github.com/rostyslav-khomyk/ha-airprint-bridge
@@ -11,8 +11,14 @@ startup: services
 boot: auto
 host_network: true
 host_dbus: false
-homeassistant_api: false
+homeassistant_api: true
 usb: false
+ingress: true
+ingress_port: 8098
+panel_icon: mdi:printer
+panel_title: Epson Printer
+panel_admin: true
+watchdog: http://[HOST]:8098/health
 options:
   mode: bridge
   printer_name: "Epson ET-2500 (HA)"
