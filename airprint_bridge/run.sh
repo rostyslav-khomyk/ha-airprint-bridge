@@ -242,7 +242,9 @@ echo "$DUPLEX" > /run/airprint-bridge/duplex
 
 IPPEVE="$(command -v ippeveprinter || ls /usr/sbin/ippeveprinter /usr/bin/ippeveprinter 2>/dev/null | head -n1)"
 [ -n "$IPPEVE" ] || wait_forever "ippeveprinter is missing from this image."
+umask 077
 mkdir -p /data/ssl /data/spool
+chmod 700 /data/ssl /data/spool
 [ "$DEBUG" = "true" ] && VERBOSE=(-vv) || VERBOSE=()
 
 # If the printer (or anything else) already announces this name, phones would
