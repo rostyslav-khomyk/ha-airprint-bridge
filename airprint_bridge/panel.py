@@ -50,7 +50,7 @@ def maintenance(action, confirmation):
 def snapshot():
     conn = connection()
     printer = conn.getPrinterAttributes(QUEUE)
-    jobs = conn.getJobs(which_jobs='all', requested_attributes=['job-name', 'job-state', 'time-at-creation', 'job-impressions-completed'])
+    jobs = conn.getJobs(which_jobs='all')
     return {'printer': {'state': printer.get('printer-state'), 'message': printer.get('printer-state-message'), 'reasons': printer.get('printer-state-reasons'), 'model': printer.get('printer-make-and-model')},
             'jobs': [{'id': key, 'name': value.get('job-name', ''), 'state': STATES.get(value.get('job-state'), 'Unknown'), 'created': value.get('time-at-creation'), 'pages': value.get('job-impressions-completed')} for key, value in sorted(jobs.items(), reverse=True)][:20]}
 

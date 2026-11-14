@@ -1,3 +1,7 @@
+# 1.3.2
+
+- Retain job IDs in CUPS job queries so the sidebar can display history.
+
 # 1.3.1
 
 - Verify the ET-2500 using standard SNMP model identification; its profile has no EEPROM model-name field.
