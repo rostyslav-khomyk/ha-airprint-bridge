@@ -31,8 +31,8 @@ def allowed_peer(peer):
     return peer == '172.30.32.2'
 
 def validate_action(action, confirmation):
-    required = {'nozzle': 'PRINT', 'clean': 'CLEAN', 'power': 'POWER CLEAN', 'reset': 'PADS SERVICED'}
-    if action not in {'status', *required}:
+    required = {'reset': 'PADS SERVICED'}
+    if action not in {'status', 'nozzle', 'clean', 'power', *required}:
         raise ValueError('Unknown action')
     if action in required and confirmation != required[action]:
         raise ValueError('The confirmation phrase does not match')
@@ -60,7 +60,7 @@ def maintenance(action, confirmation):
 def snapshot():
     conn = connection()
     printer = conn.getPrinterAttributes(QUEUE)
-    jobs = conn.getJobs(which_jobs='all')
+    jobs = conn.getJobs(which_jobs='all', requested_attributes=['job-id', 'job-name', 'job-state', 'time-at-creation', 'job-impressions-completed'])
     return {'printer': {'state': printer.get('printer-state'), 'message': printer.get('printer-state-message'), 'reasons': printer.get('printer-state-reasons'), 'model': printer.get('printer-make-and-model')},
             'jobs': [{'id': key, 'name': value.get('job-name', ''), 'state': STATES.get(value.get('job-state'), 'Unknown'), 'created': value.get('time-at-creation'), 'pages': value.get('job-impressions-completed')} for key, value in sorted(jobs.items(), reverse=True)][:20]}
 

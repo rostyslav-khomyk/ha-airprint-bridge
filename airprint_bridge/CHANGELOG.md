@@ -1,3 +1,8 @@
+# 1.3.5
+
+- Make nozzle check, normal cleaning and power cleaning direct buttons, as requested.
+- Request both job IDs and display attributes from CUPS when reading history.
+
 # 1.3.4
 
 - Allow the loopback-only CUPS client to read retained job metadata for the admin panel.

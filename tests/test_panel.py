@@ -17,11 +17,13 @@ class PanelBoundaryTests(unittest.TestCase):
         for peer in ['127.0.0.1', '192.168.2.1', '172.30.32.3']:
             self.assertFalse(panel.allowed_peer(peer))
 
-    def test_no_reset_or_clean_without_matching_confirmation(self):
-        for action in ['reset', 'clean', 'power', 'nozzle']:
+    def test_reset_requires_confirmation_but_cleaning_buttons_are_direct(self):
+        for action in ['reset']:
             with self.assertRaises(ValueError):
                 panel.validate_action(action, '')
         panel.validate_action('reset', 'PADS SERVICED')
+        for action in ['clean', 'power', 'nozzle']:
+            panel.validate_action(action, '')
         with self.assertRaises(ValueError):
             panel.validate_action('arbitrary-command', 'PADS SERVICED')
 
@@ -63,3 +65,20 @@ class MaintenanceIdentityTests(unittest.TestCase):
         self.assertEqual(result['waste']['main_waste'], 54.25)
         printer.get_printer_model.assert_not_called()
         printer.reset_waste_ink_levels.assert_not_called()
+
+class JobHistoryProtocolTests(unittest.TestCase):
+    def test_requests_ids_and_fields_needed_by_history(self):
+        from unittest.mock import Mock
+        conn = Mock()
+        conn.getPrinterAttributes.return_value = {'printer-state': 3}
+        def get_jobs(**kwargs):
+            requested = kwargs.get('requested_attributes', ['job-id', 'job-uri'])
+            if 'job-id' not in requested:
+                return {}
+            values = {'job-name': 'Test document', 'job-state': 9, 'time-at-creation': 1}
+            return {1: {key: value for key, value in values.items() if key in requested}}
+        conn.getJobs.side_effect = get_jobs
+        with patch.object(panel, 'connection', return_value=conn):
+            job = panel.snapshot()['jobs'][0]
+        self.assertEqual(job['state'], 'Completed')
+        self.assertEqual(job['name'], 'Test document')

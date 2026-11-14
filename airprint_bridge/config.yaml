@@ -1,5 +1,5 @@
 name: Epson AirPrint Bridge
-version: "1.3.4"
+version: "1.3.5"
 slug: airprint_bridge
 description: AirPrint for a network Epson ET-2500, with job history and explicit maintenance controls.
 url: https://github.com/rostyslav-khomyk/ha-airprint-bridge
